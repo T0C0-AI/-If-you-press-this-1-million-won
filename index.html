@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>이거 누르면 100만원 🤑</title>
+<!-- 파비콘: 외부 파일 없이 SVG를 그대로 박아넣음. 노란 원 + 메롱 이모지로 약 올리는 컨셉 -->
+<link rel="icon" href="data:image/svg+xml,
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+    <circle cx='50' cy='50' r='48' fill='%23ffe600' stroke='%23ff2d6f' stroke-width='4'/>
+    <text x='50' y='52' font-size='62' text-anchor='middle' dominant-baseline='central'>😝</text>
+  </svg>">
+<style>
+  /* 배경: 흔한 흰색/회색 대신 쨍한 노랑→핑크. 약 올리는 분위기 */
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%; overflow: hidden;
+    font-family: -apple-system, "Apple SD Gothic Neo", "Pretendard", sans-serif;
+    background: linear-gradient(135deg, #ffe600 0%, #ff5fa2 100%);
+    user-select: none; touch-action: none;
+  }
+  .stage { position: relative; width: 100%; height: 100%; }
+
+  .title {
+    position: absolute; top: 8%; left: 50%; transform: translateX(-50%);
+    text-align: center; width: 90%;
+  }
+  .title h1 { font-size: clamp(28px, 7vw, 56px); color: #2b1500; letter-spacing: -1px; }
+  .title p  { margin-top: 10px; font-size: clamp(15px, 4vw, 22px); color: #6b3d00; font-weight: 600; }
+
+  /* 시도 횟수 카운터 */
+  .counter {
+    position: absolute; top: 8px; right: 12px;
+    background: rgba(0,0,0,.18); color: #fff; padding: 6px 14px;
+    border-radius: 999px; font-size: 15px; font-weight: 700;
+  }
+
+  /* 도망가는 버튼 */
+  .runaway {
+    position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%);
+    padding: 22px 46px; font-size: 26px; font-weight: 900; color: #fff;
+    background: #ff2d6f; border: none; border-radius: 18px; cursor: pointer;
+    box-shadow: 0 10px 0 #c70043, 0 18px 30px rgba(199,0,67,.4);
+    transition: transform .12s ease; white-space: nowrap;
+  }
+  .runaway:active { transform: translate(-50%, -50%) scale(.96); }
+
+  /* 약 올리는 말풍선 */
+  .taunt {
+    position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%);
+    font-size: clamp(18px, 5vw, 28px); font-weight: 800; color: #2b1500;
+    text-align: center; width: 90%; min-height: 40px; transition: opacity .2s;
+  }
+
+  /* 성공(끝판왕) 오버레이 */
+  .win {
+    position: absolute; inset: 0; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.82); color: #fff; text-align: center; padding: 20px;
+  }
+  .win.show { display: flex; }
+  .win h2 { font-size: clamp(34px, 9vw, 72px); margin-bottom: 16px; }
+  .win p  { font-size: clamp(16px, 4.5vw, 24px); line-height: 1.5; opacity: .9; }
+  .win small { margin-top: 26px; font-size: 14px; opacity: .55; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="counter">시도: <span id="count">0</span>번</div>
+
+  <div class="title">
+    <h1>이거 누르면 100만원 🤑</h1>
+    <p>딱 한 번만 누르면 돼요. 진짜로.</p>
+  </div>
+
+  <button class="runaway" id="btn" tabindex="-1">눌러봐 👆</button>
+
+  <div class="taunt" id="taunt">자신 있으면 눌러보시지 😏</div>
+
+  <div class="win" id="win">
+    <h2>참 잘했어요 🏆</h2>
+    <p>100번이나 시도하다니… 끈기 인정!<br>상금은 마음속에 입금됐습니다 💸</p>
+    <small>(새로고침하면 다시 약 올림)</small>
+  </div>
+</div>
+
+<script>
+  const stage  = document.getElementById('stage');
+  const btn    = document.getElementById('btn');
+  const taunt  = document.getElementById('taunt');
+  const countEl= document.getElementById('count');
+  const win    = document.getElementById('win');
+
+  let tries = 0;
+  const taunts = [
+    "어? 못 누르네? 😂", "아깝다 ㅋㅋ", "조금만 더!… 안 줌 😝",
+    "느려요 느려 🐢", "포기각? 😏", "오잉? 또 놓침?", "손이 떨려요? 🤣",
+    "100만원이 도망가요 💨", "이쯤 되면 인정 👏", "진심이면 잡아봐!"
+  ];
+
+  // 마우스가 버튼 근처에 오면 안전한 다른 위치로 순간이동
+  function flee() {
+    const pad = 12;
+    const bw = btn.offsetWidth, bh = btn.offsetHeight;
+    const maxX = window.innerWidth  - bw - pad;
+    const maxY = window.innerHeight - bh - pad;
+    // 상단 제목 영역(위 25%)은 피해서 글자 안 가리게
+    const minY = window.innerHeight * 0.25;
+
+    const x = Math.max(pad, Math.random() * maxX);
+    const y = Math.max(minY, Math.random() * maxY);
+
+    btn.style.left = x + 'px';
+    btn.style.top  = y + 'px';
+    btn.style.transform = 'translate(0, 0)';  // 도망친 뒤엔 중앙정렬 해제
+
+    tries++;
+    countEl.textContent = tries;
+    taunt.textContent = taunts[Math.floor(Math.random() * taunts.length)];
+
+    if (tries >= 100) success();
+  }
+
+  // 데스크탑: 마우스가 닿기만 해도 도망
+  btn.addEventListener('mouseenter', flee);
+  // 모바일: 손가락이 닿으려는 순간 도망 (클릭 전에 가로채기)
+  btn.addEventListener('touchstart', (e) => { e.preventDefault(); flee(); }, { passive: false });
+  // 혹시라도 눌리면 그것도 카운트
+  btn.addEventListener('click', flee);
+  // 키보드 구멍 막기: Tab으로 포커스가 닿아도 즉시 도망 + Enter/Space 무력화
+  btn.addEventListener('focus', flee);
+  btn.addEventListener('keydown', (e) => { e.preventDefault(); flee(); });
+
+  function success() {
+    win.classList.add('show');
+  }
+</script>
+</body>
+</html>
