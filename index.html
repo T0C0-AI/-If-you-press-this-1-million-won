@@ -79,6 +79,9 @@
     box-shadow:0 8px 0 #9c6f0d, 0 16px 34px rgba(245,197,66,.45), inset 0 1px 2px rgba(255,255,255,.6);
     transition:transform .1s ease; z-index:6; }
   .runaway:active { transform:translate(-50%,-50%) scale(.96); }
+  @media (pointer:coarse) {
+    .runaway { pointer-events:none; }
+  }
 
   .taunt { position:absolute; bottom:11%; left:50%; transform:translateX(-50%); width:92%;
     text-align:center; font-size:clamp(18px,5vw,28px); font-weight:800; color:#f5c542;
@@ -271,14 +274,25 @@
   });
 
   // 모바일 핵심: 손가락은 면적이 넓어서, 버튼에 닿기 전부터 더 멀리 피하게 함
-  function avoidTouch(e) {
-    const touch = e.touches[0];
-    if (!touch || !isNearButton(touch.clientX, touch.clientY, 150)) return;
+  function avoidCoarsePointer(x, y, e, shouldRegister) {
+    if (!isNearButton(x, y, 180)) return;
     e.preventDefault();
-    flee();
+    if (shouldRegister) flee(); else moveBtn();
   }
-  document.addEventListener('touchstart', avoidTouch, { passive:false, capture:true });
-  document.addEventListener('touchmove', avoidTouch, { passive:false, capture:true });
+  document.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch') avoidCoarsePointer(e.clientX, e.clientY, e, false);
+  }, { passive:false, capture:true });
+  document.addEventListener('pointermove', e => {
+    if (e.pointerType === 'touch') avoidCoarsePointer(e.clientX, e.clientY, e, true);
+  }, { passive:false, capture:true });
+  document.addEventListener('touchstart', e => {
+    const touch = e.touches[0];
+    if (touch) avoidCoarsePointer(touch.clientX, touch.clientY, e, false);
+  }, { passive:false, capture:true });
+  document.addEventListener('touchmove', e => {
+    const touch = e.touches[0];
+    if (touch) avoidCoarsePointer(touch.clientX, touch.clientY, e, true);
+  }, { passive:false, capture:true });
 
   // 키보드 안전망
   btn.addEventListener('mouseenter', flee);
