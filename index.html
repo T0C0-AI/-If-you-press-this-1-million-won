@@ -192,7 +192,22 @@
     g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
     osc.connect(g); g.connect(audioCtx.destination); osc.start(t); osc.stop(t + dur);
   }
-  const fleeSound = () => tone(720, 180, .16, 'square');           // 약 올리는 "삐용↓"
+  // 약 올리는 효과음 여러 종 — 매번 직전과 다른 걸 랜덤으로 골라 더 얄밉게
+  const fleeSounds = [
+    () => tone(720, 180, .16, 'square'),                                       // 삐용↓
+    () => tone(180, 150, .15, 'sawtooth', .10),                               // 뿌웅(방귀)
+    () => { tone(880, 880, .07); setTimeout(() => tone(620, 620, .08), 95); },// 삑-삑
+    () => tone(280, 900, .18, 'sine', .12),                                   // 위잉↑(놀림)
+    () => tone(520, 90, .22, 'triangle', .14),                               // 미끄럼↓
+    () => { tone(440, 440, .05); setTimeout(() => tone(330, 150, .16), 70); },// 삑-뿌웅
+    () => tone(1000, 480, .1, 'square', .1),                                  // 짧은 삑↓
+  ];
+  let lastSnd = -1;
+  function fleeSound() {
+    if (muted) return;
+    let i; do { i = Math.floor(Math.random() * fleeSounds.length); } while (i === lastSnd);
+    lastSnd = i; fleeSounds[i]();
+  }
   function winSound() {                                            // 동전 쏟아지는 상승음
     [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, f, .12, 'triangle', .15), i * 90));
   }

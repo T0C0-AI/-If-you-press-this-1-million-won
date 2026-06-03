@@ -1,40 +1,42 @@
 <div align="center">
 
-# 💰 Press this for $1,000,000
+# 💰 이걸 누르면 100만원
 
-**The button that runs away.** Mouse, touch, keyboard — it dodges them all.
-A tiny, single-file prank you can share with one link.
+**절대 못 누르는 버튼.** 마우스도, 손가락도, 키보드도 — 전부 피해버립니다.
+파일 하나로 끝나는, 링크 하나로 친구 약 올리는 장난 페이지예요.
 
-[**▶ Live demo**](https://t0c0-ai.github.io/-If-you-press-this-1-million-won/)
+[**▶ 직접 해보기**](https://t0c0-ai.github.io/-If-you-press-this-1-million-won/)
 
-`Vanilla HTML` · `No build` · `No dependencies` · `One file`
+🇰🇷 **한국어** · [🇺🇸 English](README.en.md)
+
+`순수 HTML` · `빌드 없음` · `의존성 없음` · `파일 하나`
 
 </div>
 
 ---
 
-## ✨ What it does
+## ✨ 뭐 하는 건데?
 
-- 🏃 **Unwinnable button** — dodges your mouse, finger, and even the `Tab` key
-- 🌐 **KO / EN toggle** — bilingual taunts
-- 🔊 **Cheeky sound effects** — generated live with the Web Audio API (no audio files)
-- 💸 **Luxury "you might actually win" theme** — floating cash, golden glow
-- 🏆 **Secret ending** — survive 100 tries to unlock it
+- 🏃 **못 이기는 버튼** — 마우스·손가락은 물론 `Tab` 키까지 피함
+- 🌐 **한국어 / 영어 전환** — 약 올리는 말도 두 나라 말로
+- 🔊 **얄미운 효과음** — Web Audio로 즉석 생성(음원 파일 없음), 매번 랜덤
+- 💸 **"진짜 줄 것 같은" 럭셔리 테마** — 떠다니는 돈, 황금 광채
+- 🏆 **숨은 엔딩** — 100번 버티면 등장 + 친구한테 떠넘기는 공유 버튼
 
-## 🚀 Run it
+## 🚀 실행
 
-Just open `index.html` in any browser. That's it — no install, no server.
+브라우저에서 `index.html` 열면 끝. 설치도, 서버도 필요 없어요.
 
 ```bash
 open index.html
 ```
 
-Or visit the [live demo](https://t0c0-ai.github.io/-If-you-press-this-1-million-won/).
+아니면 [라이브 데모](https://t0c0-ai.github.io/-If-you-press-this-1-million-won/)로 바로 접속.
 
-## 🔒 Privacy
+## 🔒 개인정보
 
-100% client-side. No tracking, no data collected, no network calls. Nothing leaves your browser.
+100% 브라우저 안에서만 동작해요. 추적·데이터 수집·서버 전송이 전혀 없어요. 아무것도 밖으로 나가지 않습니다.
 
-## 📄 License
+## 📄 라이선스
 
-MIT — do whatever, prank responsibly. 😜
+MIT — 마음껏 쓰되, 약은 적당히 올리세요. 😜
