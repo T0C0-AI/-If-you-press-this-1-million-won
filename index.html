@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>이걸 누르면 100만원 💰</title>
+<!-- 카톡·SNS 미리보기(Open Graph). 절대 URL이라야 크롤러가 읽음 -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://t0c0-ai.github.io/-If-you-press-this-1-million-won/">
+<meta property="og:title" content="이걸 누르면 100만원 💰">
+<meta property="og:description" content="버튼을 누르기만 하면 됩니다. …단, 버튼이 계속 도망갑니다 ㅋㅋ">
+<meta property="og:image" content="https://t0c0-ai.github.io/-If-you-press-this-1-million-won/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <!-- 파비콘: 외부 파일 없이 SVG. 골드 코인 컨셉 -->
 <link rel="icon" href="data:image/svg+xml,
   <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
@@ -77,7 +86,21 @@
     background:linear-gradient(135deg,#fff6d0,#f5c542,#b8860b);
     -webkit-background-clip:text; background-clip:text; color:transparent; }
   .win p { font-size:clamp(16px,4.5vw,24px); line-height:1.55; color:rgba(255,255,255,.88); }
-  .win small { margin-top:28px; font-size:14px; color:rgba(255,255,255,.45); }
+  .win small { margin-top:24px; font-size:14px; color:rgba(255,255,255,.45); }
+
+  /* 성공 화면의 "친구한테 떠넘기기" 공유 버튼 */
+  .sharebtn { margin-top:30px; padding:16px 34px; font-size:clamp(16px,4.5vw,20px); font-weight:900;
+    color:#3a2700; cursor:pointer; border:none; border-radius:14px; white-space:nowrap;
+    background:linear-gradient(135deg,#ffe9a8,#f5c542,#d99a16);
+    box-shadow:0 6px 0 #9c6f0d, 0 12px 24px rgba(245,197,66,.4); transition:transform .1s; }
+  .sharebtn:active { transform:scale(.96); }
+
+  /* 링크 복사 토스트 */
+  .toast { position:absolute; bottom:7%; left:50%; transform:translateX(-50%) translateY(20px);
+    background:rgba(20,24,40,.95); border:1px solid rgba(245,197,66,.5); color:#fff;
+    padding:12px 22px; border-radius:999px; font-size:15px; font-weight:700;
+    opacity:0; pointer-events:none; transition:.25s; z-index:30; white-space:nowrap; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -100,8 +123,11 @@
   <div class="win" id="win">
     <h2 id="winTitle"></h2>
     <p id="winBody"></p>
+    <button class="sharebtn" id="shareBtn" onclick="shareIt()"></button>
     <small id="winSmall"></small>
   </div>
+
+  <div class="toast" id="toast"></div>
 </div>
 
 <script>
@@ -116,7 +142,10 @@
         "100만원이 도망가요 💨","이쯤 되면 인정 👏","진심이면 잡아봐!"],
       winTitle:"참 잘했어요 🏆",
       winBody:"100번이나 도전하다니… 끈기 인정!<br>상금은 마음속에 입금됐습니다 💸",
-      winSmall:"(새로고침하면 다시 약 올림)"
+      winSmall:"(새로고침하면 다시 약 올림)",
+      shareBtn:"친구한테 떠넘기기 😈",
+      shareText:"이거 누르면 100만원 준대 ㅋㅋ (근데 절대 못 받음)",
+      copied:"링크 복사됨! 친구한테 붙여넣어요 😈"
     },
     en: {
       title:"Press this for $1,000,000 💰", sub:"Just press it once. For real.",
@@ -127,7 +156,10 @@
         "Your million is escaping 💨","Okay, respect 👏","Catch it if you mean it!"],
       winTitle:"Well done 🏆",
       winBody:"100 tries?! Respect the persistence!<br>Prize deposited… straight into your heart 💸",
-      winSmall:"(Refresh to get teased again)"
+      winSmall:"(Refresh to get teased again)",
+      shareBtn:"Pass it to a friend 😈",
+      shareText:"Press this for $1,000,000 lol (you'll never catch it)",
+      copied:"Link copied! Go paste it to a friend 😈"
     }
   };
 
@@ -144,6 +176,7 @@
     $('winTitle').textContent = t.winTitle;
     $('winBody').innerHTML = t.winBody;  // 신뢰된 자체 문자열만, 사용자 입력 아님
     $('winSmall').textContent = t.winSmall;
+    $('shareBtn').textContent = t.shareBtn;
     $('ko').classList.toggle('on', lang === 'ko');
     $('en').classList.toggle('on', lang === 'en');
   }
@@ -179,25 +212,57 @@
 
   // ── 도망 로직 ─────────────────────────────────────────────────────
   const btn = $('btn'), taunt = $('taunt'), win = $('win');
-  let lastTaunt = 0;
-  function flee() {
+  let lastTaunt = 0, cooling = false;
+  const SHARE_URL = 'https://t0c0-ai.github.io/-If-you-press-this-1-million-won/';
+
+  // 위치만 순간이동 — 마우스가 닿기 전에 미리 피하므로 throttle 없이 매번 실행
+  function moveBtn() {
     const pad = 12, bw = btn.offsetWidth, bh = btn.offsetHeight;
-    const maxX = innerWidth - bw - pad, minY = innerHeight * 0.27, maxY = innerHeight - bh - pad;
+    const maxX = innerWidth - bw - pad, minY = innerHeight * 0.30, maxY = innerHeight - bh - pad;
     btn.style.left = Math.max(pad, Math.random() * maxX) + 'px';
     btn.style.top  = Math.max(minY, Math.random() * maxY) + 'px';
     btn.style.transform = 'translate(0,0)';
+  }
+  // 카운트·약올림·소리는 쿨다운(280ms)으로 천천히 — 마우스 한 번 움직였다고 100 채워지지 않게
+  function register() {
+    if (cooling) return;
+    cooling = true; setTimeout(() => cooling = false, 280);
     tries++; $('count').textContent = tries;
     lastTaunt = Math.floor(Math.random() * T[lang].taunts.length);
     taunt.textContent = T[lang].taunts[lastTaunt];
     fleeSound();
     if (tries >= 100) { win.classList.add('show'); winSound(); }
   }
-  // 마우스·터치·키보드 3중 차단
-  btn.addEventListener('mouseenter', flee);
+  const flee = () => { moveBtn(); register(); };
+
+  // 데스크탑 핵심: 버튼 반경 + 120px 안에 마우스가 들어오면 닿기 전에 도망 → 절대 못 누름
+  document.addEventListener('mousemove', e => {
+    const r = btn.getBoundingClientRect();
+    const dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2);
+    if (Math.hypot(dx, dy) < Math.max(r.width, r.height)/2 + 120) { moveBtn(); register(); }
+  });
+  // 모바일(터치)·키보드 안전망
   btn.addEventListener('touchstart', e => { e.preventDefault(); flee(); }, { passive:false });
+  btn.addEventListener('mouseenter', flee);
   btn.addEventListener('click', flee);
   btn.addEventListener('focus', flee);
   btn.addEventListener('keydown', e => { e.preventDefault(); flee(); });
+
+  // ── 공유하기: 모바일은 네이티브 공유창, 데스크탑은 링크 복사 ──────────
+  function shareIt() {
+    const t = T[lang];
+    if (navigator.share) {
+      navigator.share({ title: t.title, text: t.shareText, url: SHARE_URL }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(SHARE_URL).then(() => toast(t.copied)).catch(() => toast(SHARE_URL));
+    } else {
+      toast(SHARE_URL);
+    }
+  }
+  function toast(msg) {
+    const el = $('toast'); el.textContent = msg; el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2000);
+  }
 
   render();
 </script>
