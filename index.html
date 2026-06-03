@@ -56,6 +56,12 @@
     padding:8px 15px; border-radius:999px; font-size:14px; font-weight:800; white-space:nowrap; }
   .counter b { color:#f5c542; }
 
+  /* 화면 맨 아래 진행 바 — 100번 목표가 차오르는 게 보이게 */
+  .progress { position:absolute; left:0; right:0; bottom:0; height:7px; background:rgba(255,255,255,.08); z-index:5; }
+  .bar { height:100%; width:0%; transition:width .2s ease;
+    background:linear-gradient(90deg,#d99a16,#f5c542,#ffe9a8);
+    box-shadow:0 0 14px rgba(245,197,66,.7); }
+
   .title { position:absolute; top:13%; left:50%; transform:translateX(-50%); text-align:center; width:92%; z-index:4; }
   .title h1 {
     font-size:clamp(30px, 8vw, 68px); line-height:1.1; letter-spacing:-1px; font-weight:900;
@@ -112,7 +118,7 @@
     </div>
     <div class="right">
       <button class="mute" id="mute" onclick="toggleMute()" title="sound">🔊</button>
-      <div class="counter"><span id="tlabel">시도</span> <b id="count">0</b><span id="tunit">번</span></div>
+      <div class="counter"><span id="tlabel">시도</span> <b id="count">0</b> / 100</div>
     </div>
   </div>
 
@@ -128,15 +134,17 @@
   </div>
 
   <div class="toast" id="toast"></div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
 </div>
 
 <script>
   // ── 다국어 텍스트 (KO 기본 / EN 토글) ──────────────────────────────
   const T = {
     ko: {
-      title:"이걸 누르면 100만원 💰", sub:"딱 한 번만 누르면 됩니다. 진짜로.",
-      btn:"눌러서 받기 👆", tLabel:"시도", tUnit:"번",
+      title:"이걸 누르면 100만원 💰", sub:"100번 도전에 성공하면 진짜 드려요. 못 채우면? 0원 😏",
+      btn:"눌러서 받기 👆", tLabel:"시도",
       taunt0:"자신 있으면 눌러보시지 😏",
+      milestones:{25:"겨우 25번? 100 채워야 줍니다 😏",40:"40번… 여기서 접으면 0원이에요 ㅋㅋ",50:"절반 왔다! 끝까지 가면 100만원 💰",75:"오 75번! 25번만 더 버텨요",90:"90번!! 거의 다 왔어… 진짜 줄지도?!",99:"딱 한 번만 더!! 😱"},
       taunts:["어? 못 누르네? 😂","아깝다, 진짜 줄 뻔했는데 💸","조금만 더!… 안 줌 😝",
         "느려요 느려 🐢","포기각? 😏","오잉? 또 놓침?","손이 떨려요? 🤣",
         "100만원이 도망가요 💨","이쯤 되면 인정 👏","진심이면 잡아봐!"],
@@ -148,9 +156,10 @@
       copied:"링크 복사됨! 친구한테 붙여넣어요 😈"
     },
     en: {
-      title:"Press this for $1,000,000 💰", sub:"Just press it once. For real.",
-      btn:"Tap to claim 👆", tLabel:"Tries", tUnit:"",
+      title:"Press this for $1,000,000 💰", sub:"Hit 100 tries and it's yours. Fall short? $0 😏",
+      btn:"Tap to claim 👆", tLabel:"Tries",
       taunt0:"Press it if you dare 😏",
+      milestones:{25:"Only 25? You need 100 😏",40:"40 tries… quit now and get $0 lol",50:"Halfway! Go all the way for $1,000,000 💰",75:"75!! Just 25 more to go",90:"90!! Almost there… maybe for real?!",99:"Just ONE more!! 😱"},
       taunts:["Oops, missed again? 😂","So close to a million 💸","Almost!… nope 😝",
         "Too slow 🐢","Giving up? 😏","Huh? Missed it again?","Hands shaking? 🤣",
         "Your million is escaping 💨","Okay, respect 👏","Catch it if you mean it!"],
@@ -171,7 +180,6 @@
     document.documentElement.lang = lang;
     $('h1').textContent = t.title;  $('sub').textContent = t.sub;
     $('btn').textContent = t.btn;   $('tlabel').textContent = t.tLabel;
-    $('tunit').textContent = t.tUnit;
     $('taunt').textContent = tries === 0 ? t.taunt0 : t.taunts[lastTaunt];
     $('winTitle').textContent = t.winTitle;
     $('winBody').innerHTML = t.winBody;  // 신뢰된 자체 문자열만, 사용자 입력 아님
@@ -243,8 +251,9 @@
     if (cooling) return;
     cooling = true; setTimeout(() => cooling = false, 280);
     tries++; $('count').textContent = tries;
+    $('bar').style.width = Math.min(100, tries) + '%';
     lastTaunt = Math.floor(Math.random() * T[lang].taunts.length);
-    taunt.textContent = T[lang].taunts[lastTaunt];
+    taunt.textContent = T[lang].milestones[tries] || T[lang].taunts[lastTaunt];  // 특정 횟수엔 부추기는 멘트
     fleeSound();
     if (tries >= 100) { win.classList.add('show'); winSound(); }
   }
